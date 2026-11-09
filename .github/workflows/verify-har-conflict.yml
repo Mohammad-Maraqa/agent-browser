@@ -1,0 +1,23 @@
+name: Verify HAR conflict resolution
+on:
+  push:
+    branches: [verify/har-2300-conflict]
+permissions:
+  contents: read
+jobs:
+  har:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - run: git checkout --detach HEAD^
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --manifest-path cli/Cargo.toml -- --check
+      - run: cargo test --locked --profile ci --manifest-path cli/Cargo.toml --bin agent-browser har_stop -- --test-threads=1
+      - run: cargo test --locked --profile ci --manifest-path cli/Cargo.toml --test mcp_call_cli har_stop_without_recording -- --test-threads=1
+
